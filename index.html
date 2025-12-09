@@ -3,107 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bauhaus Air Sorter</title>
-    
+    <title>Bauhaus Air Sorter - Dark Style</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            --red: #E94D36;
-            --blue: #2B5699;
-            --yellow: #F2C223;
-            --dark: #1a1a1a;
-            --glass: rgba(255, 255, 255, 0.15);
-        }
-        
-        body { margin: 0; overflow: hidden; background: var(--dark); font-family: 'Inter', sans-serif; user-select: none; }
-
-        /* 视频背景：镜像 + 透明度30% */
-        #webcam {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            opacity: 0.3;
-            transform: scaleX(-1);
-            z-index: 0;
-        }
-
-        #canvas-container {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 1;
-        }
-
-        /* UI 层 */
-        #ui-layer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 2;
-            pointer-events: none;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* 毛玻璃面板 */
-        .glass-panel {
-            background: var(--glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            color: white;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            pointer-events: auto;
-            display: none; /* 默认隐藏 */
-            animation: popIn 0.3s ease-out;
-        }
-        .glass-panel.active { display: block; }
-
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        h1 { margin: 0 0 20px 0; letter-spacing: 2px; text-transform: uppercase; }
-        input {
-            display: block; margin: 20px auto; padding: 15px;
-            border-radius: 8px; border: none; background: rgba(0,0,0,0.5);
-            color: white; text-align: center; font-size: 1.2rem; outline: none;
-        }
-        button {
-            padding: 12px 30px; background: var(--red); color: white;
-            border: none; border-radius: 8px; font-weight: bold; font-size: 1rem;
-            cursor: pointer; transition: 0.2s; text-transform: uppercase;
-        }
-        button:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--red); }
-
-        /* HUD */
-        #hud {
-            position: absolute; top: 20px; left: 0; width: 100%;
-            display: none; justify-content: space-between; padding: 0 40px; box-sizing: border-box;
-            color: white; font-size: 1.2rem; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-        #timer-bar {
-            position: absolute; top: 0; left: 0; height: 6px; background: var(--yellow);
-            width: 100%; transition: width 1s linear;
-        }
-
-        /* 颁奖台 */
-        .podium-container { display: flex; align-items: flex-end; justify-content: center; gap: 15px; height: 200px; margin-top: 20px; }
-        .podium-step { display: flex; flex-direction: column; align-items: center; width: 80px; text-align: center; }
-        .podium-step .bar { width: 100%; border-radius: 5px 5px 0 0; margin-top: 10px; position: relative; }
-        .podium-step .name { font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
-        .podium-step .time { font-size: 0.8rem; opacity: 0.8; }
-        
-        .rank-1 .bar { height: 120px; background: var(--red); }
-        .rank-2 .bar { height: 80px; background: var(--blue); }
-        .rank-3 .bar { height: 50px; background: var(--yellow); }
-    </style>
 </head>
 <body>
 
@@ -114,415 +18,44 @@
     <div id="ui-layer">
         
         <div id="screen-setup" class="glass-panel active">
-            <h1>Air Sorter 3D</h1>
-            <p>BAUHAUS EDITION</p>
-            <input type="number" id="input-players" placeholder="Number of Players" value="1" min="1" max="10">
-            <button onclick="gameManager.setTotalPlayers()">Next</button>
+            <h1>Air Sorter</h1>
+            <p class="subtitle">Bauhaus Edition</p>
+            <p>Pinch to Grab & Sort</p>
+            <div class="input-group">
+                <label for="input-players">Players</label>
+                <input type="number" id="input-players" value="1" min="1" max="10">
+            </div>
+            <button id="btn-start">START GAME</button>
         </div>
 
         <div id="screen-name" class="glass-panel">
             <h2 id="player-title">Player 1</h2>
-            <p>Pinch fingers to grab shapes.</p>
-            <input type="text" id="input-name" placeholder="Enter Name">
-            <button onclick="gameManager.startGame()">Start Game</button>
+            <p>Ready?</p>
+            <input type="text" id="input-name" placeholder="Enter Your Name">
+            <button id="btn-play">PLAY NOW</button>
         </div>
 
         <div id="screen-leaderboard" class="glass-panel">
-            <h1>Results</h1>
+            <h2>Results</h2>
             <div id="podium" class="podium-container"></div>
-            <button onclick="location.reload()" style="margin-top: 30px;">Restart</button>
+            <button id="btn-restart-panel">PLAY AGAIN</button>
         </div>
 
         <div id="hud">
-            <div id="timer-bar"></div>
-            <div id="hud-name">Player: -</div>
-            <div id="hud-score">Score: 0/10</div>
+            <div id="hud-left">
+                <div class="hud-item icon-timer">
+                    <span id="hud-timer">60s</span>
+                </div>
+                <div class="hud-item icon-score">
+                    <span id="hud-score">0/10</span>
+                </div>
+            </div>
+            <div id="hud-right">
+                <button id="btn-restart-hud" class="hud-item icon-restart"></button>
+            </div>
         </div>
     </div>
 
-    <script>
-        // --- 1. Audio System (Sparkle Sound) ---
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSparkle() {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            const now = audioCtx.currentTime;
-            [440, 554, 659, 880].forEach((freq, i) => { // A Major chord
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.value = freq;
-                gain.gain.setValueAtTime(0.1, now + i*0.05);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + i*0.05 + 0.3);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now + i*0.05);
-                osc.stop(now + i*0.05 + 0.3);
-            });
-        }
-
-        // --- 2. Game Logic Manager ---
-        const gameManager = {
-            state: 'SETUP',
-            totalPlayers: 0,
-            players: [],
-            currentPlayerIndex: 0,
-            score: 0,
-            startTime: 0,
-            roundDuration: 60, // seconds
-            timerInterval: null,
-
-            setTotalPlayers: () => {
-                const num = parseInt(document.getElementById('input-players').value) || 1;
-                gameManager.totalPlayers = num;
-                gameManager.switchScreen('screen-name');
-                gameManager.updateNameScreen();
-            },
-
-            updateNameScreen: () => {
-                document.getElementById('player-title').innerText = `Player ${gameManager.currentPlayerIndex + 1} / ${gameManager.totalPlayers}`;
-                document.getElementById('input-name').value = `Player ${gameManager.currentPlayerIndex + 1}`;
-            },
-
-            startGame: () => {
-                const name = document.getElementById('input-name').value;
-                gameManager.players[gameManager.currentPlayerIndex] = { name: name, time: 999 };
-                
-                gameManager.switchScreen(null); // Hide all menus
-                document.getElementById('hud').style.display = 'flex';
-                
-                // Reset Game Scene
-                scene3D.resetShapes();
-                gameManager.score = 0;
-                gameManager.updateHUD();
-                gameManager.startTime = Date.now();
-                
-                // Start Timer
-                document.getElementById('timer-bar').style.transition = 'none';
-                document.getElementById('timer-bar').style.width = '100%';
-                setTimeout(() => {
-                    document.getElementById('timer-bar').style.transition = `width ${gameManager.roundDuration}s linear`;
-                    document.getElementById('timer-bar').style.width = '0%';
-                }, 100);
-
-                gameManager.timerInterval = setTimeout(() => {
-                    gameManager.endRound(false); // Time's up
-                }, gameManager.roundDuration * 1000);
-            },
-
-            handleScore: () => {
-                gameManager.score++;
-                gameManager.updateHUD();
-                playSparkle();
-                if (gameManager.score >= 10) {
-                    gameManager.endRound(true); // Completed all
-                }
-            },
-
-            updateHUD: () => {
-                document.getElementById('hud-name').innerText = `Player: ${gameManager.players[gameManager.currentPlayerIndex].name}`;
-                document.getElementById('hud-score').innerText = `Score: ${gameManager.score}/10`;
-            },
-
-            endRound: (completed) => {
-                clearTimeout(gameManager.timerInterval);
-                const timeTaken = (Date.now() - gameManager.startTime) / 1000;
-                gameManager.players[gameManager.currentPlayerIndex].time = completed ? timeTaken : 60;
-
-                gameManager.currentPlayerIndex++;
-                if (gameManager.currentPlayerIndex < gameManager.totalPlayers) {
-                    gameManager.switchScreen('screen-name');
-                    gameManager.updateNameScreen();
-                } else {
-                    gameManager.showLeaderboard();
-                }
-                document.getElementById('hud').style.display = 'none';
-            },
-
-            showLeaderboard: () => {
-                gameManager.switchScreen('screen-leaderboard');
-                const sorted = [...gameManager.players].sort((a, b) => a.time - b.time);
-                const podium = document.getElementById('podium');
-                podium.innerHTML = '';
-                
-                // Top 3
-                const order = [1, 0, 2]; // Show winner in middle (2nd, 1st, 3rd logic visually)
-                order.forEach(idx => {
-                    if (sorted[idx]) {
-                        const p = sorted[idx];
-                        const div = document.createElement('div');
-                        div.className = `podium-step rank-${idx+1}`;
-                        div.innerHTML = `
-                            <div class="name">${p.name}</div>
-                            <div class="time">${p.time.toFixed(1)}s</div>
-                            <div class="bar">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</div>
-                        `;
-                        podium.appendChild(div);
-                    }
-                });
-            },
-
-            switchScreen: (id) => {
-                document.querySelectorAll('.glass-panel').forEach(el => el.classList.remove('active'));
-                if(id) document.getElementById(id).classList.add('active');
-            }
-        };
-
-        // --- 3. Three.js Scene Setup ---
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 0, 10);
-        
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(5, 10, 7);
-        scene.add(dirLight);
-
-        // Materials (Bauhaus Colors)
-        const matRed = new THREE.MeshStandardMaterial({ color: 0xE94D36, roughness: 0.3 });
-        const matBlue = new THREE.MeshStandardMaterial({ color: 0x2B5699, roughness: 0.3 });
-        const matYellow = new THREE.MeshStandardMaterial({ color: 0xF2C223, roughness: 0.3 });
-        const matGlass = new THREE.MeshStandardMaterial({ color: 0xffffff, opacity: 0.5, transparent: true });
-        
-        // Target Boxes (Right Side)
-        const targets = [];
-        function createBox(x, type, mat) {
-            const group = new THREE.Group();
-            group.position.set(x, -2, 0);
-            
-            // Box
-            const geo = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color: 0xeeeeee}));
-            group.add(mesh);
-
-            // Icon on top
-            let iconGeo;
-            if(type === 'cube') iconGeo = new THREE.BoxGeometry(0.8, 0.1, 0.8);
-            if(type === 'sphere') iconGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.1, 32);
-            if(type === 'cone') iconGeo = new THREE.ConeGeometry(0.4, 0.1, 4); // Triangle-ish
-            
-            const icon = new THREE.Mesh(iconGeo, new THREE.MeshBasicMaterial({color: 0x333333}));
-            icon.position.y = 0.8;
-            group.add(icon);
-
-            scene.add(group);
-            targets.push({ x: x, type: type, mesh: group });
-        }
-        createBox(3, 'cube', matRed);
-        createBox(5, 'sphere', matBlue);
-        createBox(7, 'cone', matYellow);
-
-        // Shapes Logic
-        let shapes = [];
-        let particles = [];
-        const shapeTypes = [
-            { type: 'cube', mat: matRed, geo: new THREE.BoxGeometry(0.7, 0.7, 0.7) },
-            { type: 'sphere', mat: matBlue, geo: new THREE.SphereGeometry(0.4, 32, 32) },
-            { type: 'cone', mat: matYellow, geo: new THREE.ConeGeometry(0.4, 0.8, 32) }
-        ];
-
-        const scene3D = {
-            resetShapes: () => {
-                // Clear old shapes
-                shapes.forEach(s => scene.remove(s.mesh));
-                shapes = [];
-                
-                // Create 10 Bauhaus shapes
-                for (let i = 0; i < 10; i++) {
-                    const typeData = shapeTypes[i % 3]; // Cycle through types
-                    const mesh = new THREE.Mesh(typeData.geo, typeData.mat);
-                    
-                    // Stack on Left Side
-                    const startPos = new THREE.Vector3(-6 + (i%2)*1.5, 4 - i*0.8, 0);
-                    mesh.position.copy(startPos);
-                    
-                    scene.add(mesh);
-                    shapes.push({
-                        mesh: mesh,
-                        type: typeData.type,
-                        basePos: startPos,
-                        isGrabbed: false,
-                        active: true
-                    });
-                }
-            },
-            
-            explode: (pos, color) => {
-                for(let i=0; i<15; i++) {
-                    const pGeo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-                    const pMat = new THREE.MeshBasicMaterial({ color: color });
-                    const pMesh = new THREE.Mesh(pGeo, pMat);
-                    pMesh.position.copy(pos);
-                    pMesh.position.x += (Math.random()-0.5);
-                    pMesh.position.y += (Math.random()-0.5);
-                    
-                    scene.add(pMesh);
-                    particles.push({
-                        mesh: pMesh,
-                        vel: new THREE.Vector3((Math.random()-0.5)*0.3, (Math.random()-0.5)*0.3, (Math.random()-0.5)*0.3),
-                        life: 1.0
-                    });
-                }
-            }
-        };
-
-        // Cursor
-        const cursor = new THREE.Mesh(
-            new THREE.RingGeometry(0.15, 0.2, 32),
-            new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })
-        );
-        scene.add(cursor);
-
-        // --- 4. MediaPipe & Hand Tracking ---
-        let handLandmarker = null;
-        let isPinching = false;
-        
-        async function initVision() {
-            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm");
-            handLandmarker = await HandLandmarker.createFromOptions(vision, {
-                baseOptions: {
-                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-                    delegate: "GPU"
-                },
-                runningMode: "VIDEO",
-                numHands: 1
-            });
-            startCamera();
-        }
-
-        async function startCamera() {
-            const video = document.getElementById('webcam');
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
-            video.srcObject = stream;
-            video.addEventListener('loadeddata', predictWebcam);
-        }
-
-        let lastVideoTime = -1;
-        function predictWebcam() {
-            const video = document.getElementById('webcam');
-            const now = performance.now();
-            
-            if (video.currentTime !== lastVideoTime && handLandmarker) {
-                lastVideoTime = video.currentTime;
-                const results = handLandmarker.detectForVideo(video, now);
-                
-                if (results.landmarks && results.landmarks.length > 0) {
-                    const lm = results.landmarks[0];
-                    const index = lm[8];
-                    const thumb = lm[4];
-
-                    // Map Screen (0-1) to 3D World (Approx -8 to 8 X, -5 to 5 Y at Z=0)
-                    // Note: Video is mirrored in CSS, so we flip X here for logic
-                    const x = (0.5 - index.x) * 16; 
-                    const y = (0.5 - index.y) * 10;
-                    
-                    cursor.position.set(x, y, 0);
-
-                    // Pinch Calc
-                    const dist = Math.sqrt(Math.pow(index.x - thumb.x, 2) + Math.pow(index.y - thumb.y, 2));
-                    const wasPinching = isPinching;
-                    isPinching = dist < 0.08; // Threshold
-
-                    cursor.material.color.setHex(isPinching ? 0xE94D36 : 0xffffff);
-
-                    // Interaction Logic
-                    updateInteraction(x, y, isPinching);
-                }
-            }
-            requestAnimationFrame(predictWebcam);
-        }
-
-        function updateInteraction(cx, cy, pinching) {
-            shapes.forEach(s => {
-                if (!s.active) return;
-
-                const dist = s.mesh.position.distanceTo(cursor.position);
-
-                if (s.isGrabbed) {
-                    if (pinching) {
-                        // Dragging
-                        s.mesh.position.lerp(cursor.position, 0.2);
-                        s.mesh.position.z = 2; // Lift
-                        s.mesh.rotation.z = -0.2; // Tilt
-                    } else {
-                        // Released
-                        s.isGrabbed = false;
-                        checkDrop(s);
-                    }
-                } else {
-                    // Hovering
-                    if (pinching && dist < 1.0) {
-                        s.isGrabbed = true;
-                    } else {
-                        // Return to stack
-                        s.mesh.position.lerp(s.basePos, 0.1);
-                        s.mesh.position.z = 0;
-                        s.mesh.rotation.z = 0;
-                    }
-                }
-            });
-        }
-
-        function checkDrop(shape) {
-            let dropped = false;
-            targets.forEach(t => {
-                const dx = Math.abs(shape.mesh.position.x - t.x);
-                const dy = Math.abs(shape.mesh.position.y - (-2)); // Box Y is -2
-                
-                if (dx < 1.0 && dy < 1.5) {
-                    if (shape.type === t.type) {
-                        // Success
-                        scene3D.explode(shape.mesh.position, shape.mesh.material.color);
-                        scene.remove(shape.mesh);
-                        shape.active = false;
-                        gameManager.handleScore();
-                        dropped = true;
-                        
-                        // Bounce Box
-                        t.mesh.scale.set(1.2, 1.2, 1.2);
-                        setTimeout(() => t.mesh.scale.set(1, 1, 1), 200);
-                    }
-                }
-            });
-            
-            // If failed to drop, it automatically lerps back to basePos in updateInteraction
-        }
-
-        // --- 5. Animation Loop ---
-        function animate() {
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
-
-            // Particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.mesh.position.add(p.vel);
-                p.mesh.rotation.x += 0.1;
-                p.mesh.scale.multiplyScalar(0.9);
-                p.life -= 0.05;
-                if(p.life <= 0) {
-                    scene.remove(p.mesh);
-                    particles.splice(i, 1);
-                }
-            }
-        }
-
-        // Initialize
-        initVision();
-        animate();
-        
-        // Handle Resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
