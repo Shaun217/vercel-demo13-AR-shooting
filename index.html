@@ -3,55 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bauhaus Air Sorter - Dark Style</title>
+    <title>Cute Shape Sorter</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
 </head>
 <body>
-
-    <video id="webcam" playsinline autoplay muted></video>
 
     <div id="canvas-container"></div>
 
     <div id="ui-layer">
         
-        <div id="screen-setup" class="glass-panel active">
-            <h1>Air Sorter</h1>
-            <p class="subtitle">Bauhaus Edition</p>
-            <p>Pinch to Grab & Sort</p>
+        <div id="screen-setup" class="panel active">
+            <h1>Shape Sorter</h1>
+            <p class="subtitle">Cute Edition</p>
             <div class="input-group">
-                <label for="input-players">Players</label>
+                <label>Players</label>
                 <input type="number" id="input-players" value="1" min="1" max="10">
             </div>
-            <button id="btn-start">START GAME</button>
+            <button id="btn-start">START</button>
         </div>
 
-        <div id="screen-name" class="glass-panel">
+        <div id="screen-name" class="panel">
             <h2 id="player-title">Player 1</h2>
-            <p>Ready?</p>
-            <input type="text" id="input-name" placeholder="Enter Your Name">
-            <button id="btn-play">PLAY NOW</button>
+            <p>Drag shapes with mouse!</p>
+            <input type="text" id="input-name" placeholder="Your Name">
+            <button id="btn-play">GO!</button>
         </div>
 
-        <div id="screen-leaderboard" class="glass-panel">
-            <h2>Results</h2>
+        <div id="screen-leaderboard" class="panel">
+            <h2>🏆 Ranking</h2>
             <div id="podium" class="podium-container"></div>
-            <button id="btn-restart-panel">PLAY AGAIN</button>
+            <button id="btn-restart-panel">REPLAY</button>
         </div>
 
         <div id="hud">
-            <div id="hud-left">
-                <div class="hud-item icon-timer">
-                    <span id="hud-timer">60s</span>
-                </div>
-                <div class="hud-item icon-score">
-                    <span id="hud-score">0/10</span>
-                </div>
+            <div class="pill">
+                <span class="icon">⏱</span>
+                <span id="hud-timer">60s</span>
             </div>
-            <div id="hud-right">
-                <button id="btn-restart-hud" class="hud-item icon-restart"></button>
+            <div class="pill">
+                <span class="icon">⭐</span>
+                <span id="hud-score">0/10</span>
             </div>
         </div>
     </div>

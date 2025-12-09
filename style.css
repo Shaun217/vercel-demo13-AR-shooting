@@ -1,132 +1,109 @@
 :root {
-    --red: #E94D36;
-    --blue: #2B5699;
-    --yellow: #F2C223;
-    --bg-dark: #1a1a1a;
-    --glass-bg: rgba(30, 30, 30, 0.85); /* Darker glass */
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --text-color: #ffffff;
-    --icon-color: #2B5699; /* Dark blue icons */
-    --font-family: 'Inter', sans-serif;
+    --bg-color: #2c2c34; /* Dark cute grey */
+    --panel-bg: #ffffff;
+    --text-color: #4a4a55;
+    --accent: #FF8BA7; /* Soft Pink */
+    --blue: #86C1E3;   /* Soft Blue */
+    --yellow: #F9D56E; /* Soft Yellow */
+    --font: 'Nunito', sans-serif;
 }
 
 body {
     margin: 0;
     overflow: hidden;
-    background: var(--bg-dark);
-    font-family: var(--font-family);
+    background: var(--bg-color);
+    font-family: var(--font);
     user-select: none;
-    color: var(--text-color);
-}
-
-/* Video Background - Fullscreen & Darker */
-#webcam {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0.5; /* Increased opacity for darker look */
-    transform: scaleX(-1);
-    z-index: 0;
-    filter: brightness(0.7) contrast(1.1); /* Enhance dark look */
 }
 
 #canvas-container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
-    pointer-events: none; /* Let clicks pass through */
 }
 
-/* UI Layer - Center everything */
 #ui-layer {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
+    pointer-events: none;
     display: flex; justify-content: center; align-items: center;
-    pointer-events: none; /* Let events pass to children */
 }
 
-/* Glass Panels */
-.glass-panel {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
-    padding: 30px 40px;
-    border-radius: 16px;
+/* Panels (White Cards) */
+.panel {
+    background: var(--panel-bg);
+    padding: 40px;
+    border-radius: 30px; /* Super rounded */
     text-align: center;
-    pointer-events: auto; /* Enable interaction */
+    pointer-events: auto;
     display: none;
     flex-direction: column;
     gap: 20px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    min-width: 300px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    min-width: 280px;
+    animation: floatIn 0.4s ease-out;
 }
-.glass-panel.active { display: flex; }
+.panel.active { display: flex; }
 
-h1 { margin: 0; font-weight: 600; letter-spacing: 1px; }
-h2 { margin: 0; font-weight: 600; }
-.subtitle { font-size: 0.9rem; opacity: 0.7; margin-top: -15px; }
-p { opacity: 0.8; font-size: 0.95rem; }
+@keyframes floatIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
 
-.input-group { display: flex; align-items: center; justify-content: center; gap: 10px; }
-label { font-size: 0.9rem; opacity: 0.8; }
+h1 { margin: 0; color: var(--text-color); font-weight: 800; font-size: 2rem;}
+h2 { margin: 0; color: var(--text-color); }
+.subtitle { color: var(--blue); margin-top: -10px; font-weight: 700; }
+p { color: #888; font-weight: 600; }
+
 input {
-    background: rgba(255,255,255,0.1);
-    border: 1px solid var(--glass-border);
-    border-radius: 8px;
-    padding: 10px;
+    background: #f0f0f4;
+    border: none;
+    border-radius: 15px;
+    padding: 15px;
     color: var(--text-color);
     text-align: center;
-    font-size: 1rem;
+    font-size: 1.2rem;
+    font-weight: 700;
     outline: none;
-    width: 80px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 button {
-    background: var(--blue);
-    color: var(--text-color);
+    background: var(--text-color);
+    color: white;
     border: none;
-    border-radius: 8px;
-    padding: 12px 24px;
-    font-size: 1rem;
-    font-weight: 600;
+    border-radius: 15px;
+    padding: 15px;
+    font-size: 1.1rem;
+    font-weight: 800;
     cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
+    transition: transform 0.1s;
+    box-shadow: 0 5px 0 #333; /* 3D Button effect */
 }
-button:hover { background: #3a6db5; transform: scale(1.02); }
-button:active { transform: scale(0.98); }
+button:active { transform: translateY(5px); box-shadow: none; }
 
-/* HUD - Top Corners */
+/* HUD Pills */
 #hud {
-    position: absolute; top: 20px; left: 0; width: 100%;
-    display: none; justify-content: space-between; padding: 0 20px; box-sizing: border-box;
+    position: absolute; top: 30px; left: 30px;
+    display: none; gap: 15px;
     pointer-events: none;
 }
-#hud-left, #hud-right { display: flex; gap: 10px; pointer-events: auto; }
-
-.hud-item {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 8px 16px;
+.pill {
+    background: #ffffff;
+    padding: 10px 20px;
+    border-radius: 50px;
     display: flex;
     align-items: center;
-    font-weight: 600;
-    font-size: 0.9rem;
+    gap: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    font-weight: 800;
     color: var(--text-color);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
-
-.icon-timer::before { content: '⏱'; margin-right: 8px; }
-.icon-score::before { content: '🏆'; margin-right: 8px; }
-.icon-restart::before { content: '🔄'; font-size: 1.2rem; }
-#btn-restart-hud { padding: 8px; border-radius: 50%; cursor: pointer; }
+.icon { font-size: 1.2rem; }
 
 /* Podium */
-.podium-container { display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 150px; margin-top: 10px; }
-.podium-step { display: flex; flex-direction: column; align-items: center; width: 70px; text-align: center; }
-.podium-step .bar { width: 100%; border-radius: 4px 4px 0 0; margin-top: 5px; position: relative; }
-.podium-step .name { font-weight: bold; margin-bottom: 5px; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;}
-.podium-step .time { font-size: 0.75rem; opacity: 0.7; }
-.rank-1 .bar { height: 100px; background: var(--red); }
+.podium-container { display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 160px; }
+.podium-step { display: flex; flex-direction: column; align-items: center; width: 80px; }
+.podium-step .bar { width: 100%; border-radius: 10px 10px 0 0; margin-top: 10px; }
+.rank-1 .bar { height: 100px; background: var(--yellow); }
 .rank-2 .bar { height: 70px; background: var(--blue); }
-.rank-3 .bar { height: 50px; background: var(--yellow); }
+.rank-3 .bar { height: 50px; background: var(--accent); }
+.name { font-weight: 700; font-size: 0.9rem; color: var(--text-color); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; max-width: 100%;}

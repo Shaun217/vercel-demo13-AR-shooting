@@ -1,114 +1,110 @@
-// --- 1. Audio System (Sparkle Sound) ---
+// --- 1. Audio (Cute Pop Sound) ---
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playSparkle() {
+function playPop() {
     if(audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
     const now = audioCtx.currentTime;
-    // Play a quick, high-pitched chime (C6, E6, G6)
-    [1046.5, 1318.5, 1568.0].forEach((freq, i) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.1, now + i*0.04);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + i*0.04 + 0.2);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now + i*0.04);
-        osc.stop(now + i*0.04 + 0.2);
-    });
+    
+    osc.frequency.setValueAtTime(600, now);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+    
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.1);
 }
 
-// --- 2. Game Logic Manager ---
-const gameManager = {
+// --- 2. Game Logic ---
+const game = {
     state: 'SETUP',
-    totalPlayers: 0,
     players: [],
-    currentPlayerIndex: 0,
+    currIdx: 0,
     score: 0,
     startTime: 0,
-    roundDuration: 60,
-    timerInterval: null,
+    timer: null,
 
-    setTotalPlayers: () => {
-        const num = parseInt(document.getElementById('input-players').value) || 1;
-        gameManager.totalPlayers = num;
-        gameManager.switchScreen('screen-name');
-        gameManager.updateNameScreen();
+    init: () => {
+        document.getElementById('btn-start').onclick = game.setupPlayers;
+        document.getElementById('btn-play').onclick = game.startRound;
+        document.getElementById('btn-restart-panel').onclick = () => location.reload();
     },
 
-    updateNameScreen: () => {
-        document.getElementById('player-title').innerText = `Player ${gameManager.currentPlayerIndex + 1}`;
-        document.getElementById('input-name').value = `Player ${gameManager.currentPlayerIndex + 1}`;
+    setupPlayers: () => {
+        const count = parseInt(document.getElementById('input-players').value) || 1;
+        game.totalPlayers = count;
+        game.switchScreen('screen-name');
+        game.updateTitle();
     },
 
-    startGame: () => {
+    updateTitle: () => {
+        document.getElementById('player-title').innerText = `Player ${game.currIdx + 1}`;
+        document.getElementById('input-name').value = `Player ${game.currIdx + 1}`;
+    },
+
+    startRound: () => {
         const name = document.getElementById('input-name').value;
-        gameManager.players[gameManager.currentPlayerIndex] = { name: name, time: 999 };
+        game.players[game.currIdx] = { name, time: 999 };
         
-        gameManager.switchScreen(null); // Hide panels
+        game.switchScreen(null); // Clear UI
         document.getElementById('hud').style.display = 'flex';
         
-        scene3D.resetShapes();
-        gameManager.score = 0;
-        gameManager.updateHUD();
-        gameManager.startTime = Date.now();
+        scene3D.spawnShapes();
+        game.score = 0;
+        document.getElementById('hud-score').innerText = `0/10`;
+        game.startTime = Date.now();
         
-        let timeLeft = gameManager.roundDuration;
+        let timeLeft = 60;
         document.getElementById('hud-timer').innerText = `${timeLeft}s`;
         
-        gameManager.timerInterval = setInterval(() => {
+        game.timer = setInterval(() => {
             timeLeft--;
             document.getElementById('hud-timer').innerText = `${timeLeft}s`;
-            if (timeLeft <= 0) {
-                gameManager.endRound(false);
-            }
+            if(timeLeft <= 0) game.endRound(false);
         }, 1000);
     },
 
-    handleScore: () => {
-        gameManager.score++;
-        gameManager.updateHUD();
-        playSparkle();
-        if (gameManager.score >= 5) { // Changed to 5 for 5 shapes
-            gameManager.endRound(true);
-        }
-    },
-
-    updateHUD: () => {
-        document.getElementById('hud-score').innerText = `${gameManager.score}/5`;
+    scorePoint: () => {
+        game.score++;
+        document.getElementById('hud-score').innerText = `${game.score}/10`;
+        playPop();
+        if(game.score >= 10) game.endRound(true);
     },
 
     endRound: (completed) => {
-        clearInterval(gameManager.timerInterval);
-        const timeTaken = (Date.now() - gameManager.startTime) / 1000;
-        gameManager.players[gameManager.currentPlayerIndex].time = completed ? timeTaken : 60;
-
-        gameManager.currentPlayerIndex++;
-        if (gameManager.currentPlayerIndex < gameManager.totalPlayers) {
-            gameManager.switchScreen('screen-name');
-            gameManager.updateNameScreen();
+        clearInterval(game.timer);
+        const time = completed ? (Date.now() - game.startTime)/1000 : 60;
+        game.players[game.currIdx].time = time;
+        
+        game.currIdx++;
+        if(game.currIdx < game.totalPlayers) {
+            game.switchScreen('screen-name');
+            game.updateTitle();
         } else {
-            gameManager.showLeaderboard();
+            game.showLeaderboard();
         }
         document.getElementById('hud').style.display = 'none';
     },
 
     showLeaderboard: () => {
-        gameManager.switchScreen('screen-leaderboard');
-        const sorted = [...gameManager.players].sort((a, b) => a.time - b.time);
+        game.switchScreen('screen-leaderboard');
+        const sorted = [...game.players].sort((a,b) => a.time - b.time);
         const podium = document.getElementById('podium');
         podium.innerHTML = '';
         
         const order = [1, 0, 2];
-        order.forEach(idx => {
-            if (sorted[idx]) {
-                const p = sorted[idx];
+        order.forEach(i => {
+            if(sorted[i]) {
+                const p = sorted[i];
                 const div = document.createElement('div');
-                div.className = `podium-step rank-${idx+1}`;
+                div.className = `podium-step rank-${i+1}`;
                 div.innerHTML = `
                     <div class="name">${p.name}</div>
-                    <div class="time">${p.time.toFixed(1)}s</div>
-                    <div class="bar">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</div>
+                    <div class="bar"></div>
+                    <div>${p.time.toFixed(1)}s</div>
                 `;
                 podium.appendChild(div);
             }
@@ -116,274 +112,261 @@ const gameManager = {
     },
 
     switchScreen: (id) => {
-        document.querySelectorAll('.glass-panel').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         if(id) document.getElementById(id).classList.add('active');
-    },
-    
-    restart: () => {
-        location.reload();
     }
 };
 
-//Event Listeners
-document.getElementById('btn-start').onclick = gameManager.setTotalPlayers;
-document.getElementById('btn-play').onclick = gameManager.startGame;
-document.getElementById('btn-restart-panel').onclick = gameManager.restart;
-document.getElementById('btn-restart-hud').onclick = gameManager.restart;
-
-// --- 3. Three.js Scene Setup ---
+// --- 3. Three.js Scene & Interaction ---
 const scene = new THREE.Scene();
-// Adjust camera to look at center
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 0, 8);
+scene.background = new THREE.Color('#2c2c34'); // Match CSS background
 
-const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 100);
+camera.position.set(0, 0, 15);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-scene.add(ambientLight);
+// Lighting (Soft Studio Light)
+const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(ambient);
+
 const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-dirLight.position.set(2, 5, 5);
+dirLight.position.set(5, 10, 10);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.width = 2048;
+dirLight.shadow.mapSize.height = 2048;
 scene.add(dirLight);
 
-// Materials (Bauhaus Colors)
-const matRed = new THREE.MeshStandardMaterial({ color: 0xE94D36, roughness: 0.4 });
-const matBlue = new THREE.MeshStandardMaterial({ color: 0x2B5699, roughness: 0.4 });
-const matYellow = new THREE.MeshStandardMaterial({ color: 0xF2C223, roughness: 0.4 });
-const matIcon = new THREE.MeshBasicMaterial({ color: 0x2B5699 }); // Dark blue for icons
-const matBox = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2 });
+// Materials (Matte Clay Look)
+const matParams = { roughness: 0.7, metalness: 0.0 };
+const matBlue = new THREE.MeshStandardMaterial({ color: '#86C1E3', ...matParams });
+const matPink = new THREE.MeshStandardMaterial({ color: '#FF8BA7', ...matParams });
+const matYellow = new THREE.MeshStandardMaterial({ color: '#F9D56E', ...matParams });
+const matWhite = new THREE.MeshStandardMaterial({ color: '#ffffff', ...matParams });
+const matDark = new THREE.MeshStandardMaterial({ color: '#333344', ...matParams });
 
-// Target Boxes (Centered Row)
+// Targets (White Rounded Boxes with Icons)
 const targets = [];
-function createBox(x, type, iconGeo) {
+function createTarget(x, type) {
     const group = new THREE.Group();
-    group.position.set(x, 0, 0); // Centered Y
-    
-    // Box
-    const boxGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-    const mesh = new THREE.Mesh(boxGeo, matBox);
+    group.position.set(x, 0, 0);
+
+    // White Box
+    const geo = new THREE.BoxGeometry(2, 2, 0.5);
+    const mesh = new THREE.Mesh(geo, matWhite);
+    mesh.receiveShadow = true;
     group.add(mesh);
 
-    // Icon on front
-    const icon = new THREE.Mesh(iconGeo, matIcon);
-    icon.position.z = 0.61; // Slightly in front
+    // Icon
+    let iconGeo;
+    if(type === 'cube') iconGeo = new THREE.PlaneGeometry(0.8, 0.8); // Square
+    if(type === 'cone') iconGeo = new THREE.CircleGeometry(0.6, 3); // Triangle
+    if(type === 'sphere') iconGeo = new THREE.CircleGeometry(0.5, 32); // Circle
+    
+    const icon = new THREE.Mesh(iconGeo, matDark);
+    icon.position.z = 0.26;
+    if(type === 'cone') icon.rotation.z = Math.PI; // Adjust triangle orientation
     group.add(icon);
 
     scene.add(group);
-    targets.push({ x: x, type: type, mesh: group });
+    targets.push({ x, type, mesh: group });
 }
 
-// Create icons geometry
-const triangleGeo = new THREE.CircleGeometry(0.3, 3);
-const squareGeo = new THREE.PlaneGeometry(0.5, 0.5);
-const circleGeo = new THREE.CircleGeometry(0.3, 32);
+// Position targets like the image: Square, Triangle, Circle
+createTarget(-3, 'cone'); 
+createTarget(0, 'cube');
+createTarget(3, 'sphere');
 
-// Place boxes centered horizontally
-createBox(-1.5, 'cone', triangleGeo);
-createBox(0, 'cube', squareGeo);
-createBox(1.5, 'sphere', circleGeo);
-
-// Shapes Logic
+// Shapes
 let shapes = [];
 let particles = [];
 const shapeTypes = [
-    { type: 'cube', mat: matBlue, geo: new THREE.BoxGeometry(0.6, 0.6, 0.6) }, // Blue Cube
-    { type: 'cone', mat: matRed, geo: new THREE.ConeGeometry(0.35, 0.7, 32) }, // Red Cone
-    { type: 'sphere', mat: matYellow, geo: new THREE.SphereGeometry(0.35, 32, 32) }, // Yellow Sphere
-    { type: 'cone', mat: matRed, geo: new THREE.ConeGeometry(0.35, 0.7, 4) }, // Red Pyramid
-    { type: 'cube', mat: matBlue, geo: new THREE.CylinderGeometry(0.35, 0.35, 0.6, 32) } // Blue Cylinder
-    // Add more shapes as needed, matching the image style
+    { type: 'cube', geo: new THREE.BoxGeometry(0.8, 0.8, 0.8), mat: matBlue },
+    { type: 'cone', geo: new THREE.ConeGeometry(0.5, 1, 32), mat: matPink },
+    { type: 'sphere', geo: new THREE.SphereGeometry(0.5, 32, 32), mat: matYellow }
 ];
 
 const scene3D = {
-    resetShapes: () => {
+    spawnShapes: () => {
+        // Clear old
         shapes.forEach(s => scene.remove(s.mesh));
         shapes = [];
-        
-        // Create 5 shapes in a row, centered above boxes
-        const startX = -2;
-        const gap = 1;
-        for (let i = 0; i < 5; i++) {
-            const typeData = shapeTypes[i % shapeTypes.length];
-            const mesh = new THREE.Mesh(typeData.geo, typeData.mat);
+
+        // Spawn 10 shapes in a row above targets
+        for(let i=0; i<10; i++) {
+            const data = shapeTypes[Math.floor(Math.random() * 3)];
+            const mesh = new THREE.Mesh(data.geo, data.mat);
+            mesh.castShadow = true;
             
-            const startPos = new THREE.Vector3(startX + i*gap, 2, 0);
-            mesh.position.copy(startPos);
+            // Random scatter start position
+            const startX = (Math.random() - 0.5) * 8;
+            const startY = 3 + Math.random() * 2;
+            
+            mesh.position.set(startX, startY, 0);
+            mesh.rotation.set(Math.random(), Math.random(), 0);
             
             scene.add(mesh);
-            shapes.push({
-                mesh: mesh,
-                type: typeData.type,
-                basePos: startPos,
-                isGrabbed: false,
-                active: true
-            });
+            shapes.push({ mesh, type: data.type, active: true });
         }
     },
-    
+
     explode: (pos, color) => {
-        for(let i=0; i<12; i++) {
-            const pGeo = new THREE.BoxGeometry(0.08, 0.08, 0.08);
-            const pMat = new THREE.MeshBasicMaterial({ color: color });
-            const pMesh = new THREE.Mesh(pGeo, pMat);
-            pMesh.position.copy(pos);
-            
-            scene.add(pMesh);
-            particles.push({
-                mesh: pMesh,
-                vel: new THREE.Vector3((Math.random()-0.5)*0.2, (Math.random()-0.5)*0.2, (Math.random()-0.5)*0.2),
-                life: 1.0
+        for(let i=0; i<8; i++) {
+            const geo = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+            const mat = new THREE.MeshBasicMaterial({ color });
+            const p = new THREE.Mesh(geo, mat);
+            p.position.copy(pos);
+            scene.add(p);
+            particles.push({ 
+                mesh: p, 
+                vel: new THREE.Vector3((Math.random()-.5)*0.3, (Math.random()-.5)*0.3, 0),
+                life: 1.0 
             });
         }
     }
 };
 
-// Cursor
-const cursor = new THREE.Mesh(
-    new THREE.RingGeometry(0.1, 0.14, 32),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 })
-);
-scene.add(cursor);
+// --- 4. Mouse Interaction (Raycaster) ---
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // Z=0 plane
+let draggedObject = null;
+let offset = new THREE.Vector3();
 
-// --- 4. MediaPipe & Hand Tracking ---
-let handLandmarker = null;
-let isPinching = false;
+window.addEventListener('mousemove', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-async function initVision() {
-    const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm");
-    handLandmarker = await HandLandmarker.createFromOptions(vision, {
-        baseOptions: {
-            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-            delegate: "GPU"
-        },
-        runningMode: "VIDEO",
-        numHands: 1
-    });
-    startCamera();
-}
+    raycaster.setFromCamera(mouse, camera);
 
-async function startCamera() {
-    const video = document.getElementById('webcam');
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
-    video.srcObject = stream;
-    video.addEventListener('loadeddata', predictWebcam);
-}
+    if (draggedObject) {
+        const intersectPoint = new THREE.Vector3();
+        raycaster.ray.intersectPlane(dragPlane, intersectPoint);
+        draggedObject.mesh.position.copy(intersectPoint.sub(offset));
+        draggedObject.mesh.position.z = 1; // Lift up a bit
+        // Tilt effect
+        draggedObject.mesh.rotation.x = (draggedObject.mesh.position.y - intersectPoint.y) * 2;
+        draggedObject.mesh.rotation.z = (draggedObject.mesh.position.x - intersectPoint.x) * 2;
+    }
+});
 
-let lastVideoTime = -1;
-function predictWebcam() {
-    const video = document.getElementById('webcam');
-    const now = performance.now();
-    
-    if (video.currentTime !== lastVideoTime && handLandmarker) {
-        lastVideoTime = video.currentTime;
-        const results = handLandmarker.detectForVideo(video, now);
-        
-        if (results.landmarks && results.landmarks.length > 0) {
-            const lm = results.landmarks[0];
-            const index = lm[8];
-            const thumb = lm[4];
-
-            // Map Screen to World Coordinates
-            const aspect = window.innerWidth / window.innerHeight;
-            const fov = camera.fov * (Math.PI / 180);
-            const height = 2 * Math.tan(fov / 2) * camera.position.z;
-            const width = height * aspect;
-
-            // Flip X for mirrored video
-            const x = (0.5 - index.x) * width;
-            const y = (0.5 - index.y) * height;
-            
-            cursor.position.set(x, y, 0);
-
-            // Pinch Calc
-            const dist = Math.sqrt(Math.pow(index.x - thumb.x, 2) + Math.pow(index.y - thumb.y, 2));
-            isPinching = dist < 0.08;
-
-            cursor.material.color.setHex(isPinching ? 0xE94D36 : 0xffffff);
-
-            updateInteraction(x, y, isPinching);
+window.addEventListener('mousedown', () => {
+    const intersects = raycaster.intersectObjects(shapes.map(s => s.mesh));
+    if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        const shape = shapes.find(s => s.mesh === hit);
+        if (shape && shape.active) {
+            draggedObject = shape;
+            const intersectPoint = new THREE.Vector3();
+            raycaster.ray.intersectPlane(dragPlane, intersectPoint);
+            offset.copy(intersectPoint).sub(hit.position);
         }
     }
-    requestAnimationFrame(predictWebcam);
-}
+});
 
-function updateInteraction(cx, cy, pinching) {
-    shapes.forEach(s => {
-        if (!s.active) return;
+window.addEventListener('mouseup', () => {
+    if (draggedObject) {
+        checkDrop(draggedObject);
+        draggedObject = null;
+    }
+});
 
-        if (s.isGrabbed) {
-            if (pinching) {
-                // Dragging
-                s.mesh.position.lerp(cursor.position, 0.2);
-                s.mesh.position.z = 1;
-                s.mesh.rotation.x = 0.3;
-                s.mesh.rotation.z = 0.3;
-            } else {
-                // Released
-                s.isGrabbed = false;
-                checkDrop(s);
-            }
-        } else {
-            const dist = s.mesh.position.distanceTo(cursor.position);
-            // Hovering
-            if (pinching && dist < 0.8) {
-                s.isGrabbed = true;
-            } else {
-                // Return
-                s.mesh.position.lerp(s.basePos, 0.1);
-                s.mesh.position.z = 0;
-                s.mesh.rotation.set(0,0,0);
-            }
+// Touch Support (Simple mapping)
+window.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // Prevent scrolling
+    const touch = e.touches[0];
+    mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(shapes.map(s => s.mesh));
+    if (intersects.length > 0) {
+        const hit = intersects[0].object;
+        const shape = shapes.find(s => s.mesh === hit);
+        if(shape && shape.active) {
+            draggedObject = shape;
+            const intersectPoint = new THREE.Vector3();
+            raycaster.ray.intersectPlane(dragPlane, intersectPoint);
+            offset.copy(intersectPoint).sub(hit.position);
         }
-    });
-}
+    }
+}, {passive: false});
+
+window.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if(draggedObject) {
+        const touch = e.touches[0];
+        mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersectPoint = new THREE.Vector3();
+        raycaster.ray.intersectPlane(dragPlane, intersectPoint);
+        draggedObject.mesh.position.copy(intersectPoint.sub(offset));
+    }
+}, {passive: false});
+
+window.addEventListener('touchend', () => {
+    if(draggedObject) {
+        checkDrop(draggedObject);
+        draggedObject = null;
+    }
+});
 
 function checkDrop(shape) {
+    let dropped = false;
     targets.forEach(t => {
-        const dx = Math.abs(shape.mesh.position.x - t.x);
-        const dy = Math.abs(shape.mesh.position.y - t.mesh.position.y);
-        
-        if (dx < 0.8 && dy < 0.8) {
-            // Simple type matching (cone->triangle icon, cube->square icon, etc.)
-            let match = false;
-            if(shape.type === 'cone' && t.type === 'cone') match = true;
-            if(shape.type === 'cube' && t.type === 'cube') match = true;
-            if(shape.type === 'sphere' && t.type === 'sphere') match = true;
-
-            if (match) {
-                scene3D.explode(shape.mesh.position, shape.mesh.material.color);
-                scene.remove(shape.mesh);
-                shape.active = false;
-                gameManager.handleScore();
-                
-                // Bounce Box
-                t.mesh.scale.set(1.1, 1.1, 1.1);
-                setTimeout(() => t.mesh.scale.set(1, 1, 1), 200);
-            }
+        // Distance check
+        const dist = shape.mesh.position.distanceTo(new THREE.Vector3(t.x, 0, 0));
+        if (dist < 1.2 && shape.type === t.type) {
+            // Success
+            scene3D.explode(shape.mesh.position, shape.mesh.material.color);
+            scene.remove(shape.mesh);
+            shape.active = false;
+            game.scorePoint();
+            dropped = true;
+            // Target animation
+            t.mesh.scale.set(1.1, 1.1, 1.1);
+            setTimeout(() => t.mesh.scale.set(1, 1, 1), 150);
         }
     });
+
+    if (!dropped) {
+        // Bounce back if wrong
+        shape.mesh.position.z = 0;
+    }
 }
 
-// --- 5. Animation Loop ---
+// --- 5. Loop ---
 function animate() {
     requestAnimationFrame(animate);
-    renderer.render(scene, camera);
+    
+    // Rotate shapes slightly
+    shapes.forEach(s => {
+        if(s.active && s !== draggedObject) {
+            s.mesh.rotation.y += 0.01;
+        }
+    });
 
     // Particles
-    for (let i = particles.length - 1; i >= 0; i--) {
+    for(let i=particles.length-1; i>=0; i--) {
         const p = particles[i];
         p.mesh.position.add(p.vel);
-        p.mesh.scale.multiplyScalar(0.92);
+        p.mesh.scale.multiplyScalar(0.9);
         p.life -= 0.05;
         if(p.life <= 0) {
             scene.remove(p.mesh);
-            particles.splice(i, 1);
+            particles.splice(i,1);
         }
     }
+
+    renderer.render(scene, camera);
 }
 
-initVision();
+// Init
+game.init();
 animate();
 
 window.addEventListener('resize', () => {
